@@ -3,14 +3,15 @@ provider "aws" {
 }
 
 module "vpc" {
-  source = "./modules"
-  region = var.main_region
+  source = "./modules/vpc"
 }
 
 module "alb" {
-  source = "./modules"
+  source              = "./modules/alb"
+  vpc_id              = module.vpc.vpc_id
+  public_subnet_ids   = module.vpc.public_subnet_ids
+  private_subnet_ids  = module.vpc.private_subnet_ids
 }
-
 
 resource "aws_key_pair" "two_tier_key" {
   key_name   = "two-tier-key"
@@ -87,7 +88,7 @@ resource "aws_lb_target_group_attachment" "instance2" {
 }
 
 resource "aws_instance" "two-tier-instance1" {
-  ami                         = module.vpc.ami_id
+  ami                         = module.alb.ami_id
   subnet_id                   = module.vpc.subnet_id1
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.two_tier_key.key_name
@@ -97,7 +98,7 @@ resource "aws_instance" "two-tier-instance1" {
 }
 
 resource "aws_instance" "two-tier-instance2" {
-  ami                         = module.vpc.ami_id
+  ami                         = module.alb.ami_id
   subnet_id                   = module.vpc.subnet_id2
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.two_tier_key.key_name
@@ -147,4 +148,8 @@ resource "aws_db_instance" "two_tier_db" {
   parameter_group_name    = "default.mysql5.7"
   skip_final_snapshot     = true
   multi_az = true
+}
+
+data "aws_ssm_parameter" "two-tier-ami" {
+  name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 }
