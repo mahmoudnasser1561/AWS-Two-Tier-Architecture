@@ -8,4 +8,7 @@ output "lb_dns" {
   value       = aws_lb.two-tier-lb.dns_name
 }
 
-
+output "alb_sg_id" {
+  description = "ID of the ALB security group"
+  value       = aws_security_group.alb_sg.id
+}

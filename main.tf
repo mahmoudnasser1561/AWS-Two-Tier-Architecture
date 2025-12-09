@@ -26,21 +26,20 @@ resource "aws_security_group" "two_tier_sg" {
   name   = "two-tier-sg"
   vpc_id = module.vpc.vpc_id
 
-
   ingress {
-    description = "SSH from my IP"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${var.MY_IP}/32"]
+    description     = "SSH from my IP"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    cidr_blocks     = ["${var.MY_IP}/32"]
   }
 
   ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "HTTP from ALB"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [module.alb.alb_sg_id]
   }
 
   egress {
