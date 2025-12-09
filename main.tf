@@ -9,7 +9,7 @@ module "vpc" {
 
 resource "aws_key_pair" "two_tier_key" {
   key_name   = "two-tier-key"
-  public_key = file("~/.ssh/prod.pub")
+  public_key = file(var.public_key_path)
 }
 
 resource "aws_security_group" "two_tier_sg" {
