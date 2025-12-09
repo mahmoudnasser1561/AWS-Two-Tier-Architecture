@@ -17,3 +17,9 @@ output "subnet_id4" {
 output "ami_id" {
   value = data.aws_ssm_parameter.two-tier-ami.value
 }
+
+output "vpc_id" {
+  description = "The ID of the VPC"
+  value       = aws_vpc.two-tier-vpc.id
+}
+
