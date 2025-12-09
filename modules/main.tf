@@ -68,3 +68,38 @@ resource "aws_internet_gateway" "two-tier-ig" {
 data "aws_ssm_parameter" "two-tier-ami" {
   name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 }
+
+# NAT Gateway for private subnets
+resource "aws_eip" "nat" {
+  tags = {
+    Name = "nat-eip"
+  }
+}
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.two-tier-subnet-public-1.id
+}
+
+# Private Route Table
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.two-tier-vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat.id
+  }
+}
+
+# Associate private subnets with private route table
+resource "aws_route_table_association" "private1" {
+  subnet_id      = aws_subnet.two-tier-subnet-private-1.id
+  route_table_id = aws_route_table.private.id
+}
+
+resource "aws_route_table_association" "private2" {
+  subnet_id      = aws_subnet.two-tier-subnet-private-2.id
+  route_table_id = aws_route_table.private.id
+}
+
+
