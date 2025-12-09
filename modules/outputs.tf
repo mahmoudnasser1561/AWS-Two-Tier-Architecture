@@ -28,3 +28,8 @@ output "lb_dns" {
   value = aws_lb.two-tier-lb.dns_name
 }
 
+output "lb_arn" {
+  description = "arn of the alb"
+  value = aws_lb.two-tier-lb.arn
+}
+
