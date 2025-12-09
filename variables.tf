@@ -15,5 +15,10 @@ variable "db_username" {
 
 variable "MY_IP" {
   description = "My Machine IP"
-  default = "#.#.#.#"
+  default = "156.199.83.23"
 }
+
+variable "public_key_path" {
+  default = "/home/mahmoud/.ssh/prod.pub"
+}
+
