@@ -50,6 +50,29 @@ resource "aws_internet_gateway" "two-tier-ig" {
   vpc_id = aws_vpc.two-tier-vpc.id
 }
 
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.two-tier-vpc.id
+  tags = {
+    Name = "PublicRT"
+  }
+}
+
+resource "aws_route" "public_internet" {
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.two-tier-ig.id
+}
+
+resource "aws_route_table_association" "public1" {
+  subnet_id      = aws_subnet.two-tier-subnet-public-1.id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_route_table_association" "public2" {
+  subnet_id      = aws_subnet.two-tier-subnet-public-2.id
+  route_table_id = aws_route_table.public.id
+}
+
 # NAT Gateway for private subnets
 resource "aws_eip" "nat" {
   tags = {
