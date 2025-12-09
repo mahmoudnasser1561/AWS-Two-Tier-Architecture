@@ -13,6 +13,10 @@ module "alb" {
   private_subnet_ids  = module.vpc.private_subnet_ids
 }
 
+data "aws_ssm_parameter" "two-tier-ami" {
+  name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+}
+
 resource "aws_key_pair" "two_tier_key" {
   key_name   = "two-tier-key"
   public_key = file(var.public_key_path)
@@ -88,7 +92,7 @@ resource "aws_lb_target_group_attachment" "instance2" {
 }
 
 resource "aws_instance" "two-tier-instance1" {
-  ami                         = module.alb.ami_id
+  ami                         = data.aws_ssm_parameter.two-tier-ami.value
   subnet_id                   = module.vpc.subnet_id1
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.two_tier_key.key_name
@@ -98,7 +102,7 @@ resource "aws_instance" "two-tier-instance1" {
 }
 
 resource "aws_instance" "two-tier-instance2" {
-  ami                         = module.alb.ami_id
+  ami                         = data.aws_ssm_parameter.two-tier-ami.value
   subnet_id                   = module.vpc.subnet_id2
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.two_tier_key.key_name
@@ -150,6 +154,4 @@ resource "aws_db_instance" "two_tier_db" {
   multi_az = true
 }
 
-data "aws_ssm_parameter" "two-tier-ami" {
-  name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
-}
+

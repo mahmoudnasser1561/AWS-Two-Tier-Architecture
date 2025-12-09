@@ -8,7 +8,4 @@ output "lb_dns" {
   value       = aws_lb.two-tier-lb.dns_name
 }
 
-output "ami_id" {
-  description = "AMI ID from SSM parameter"
-  value       = data.aws_ssm_parameter.two-tier-ami.value
-}
+
