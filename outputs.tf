@@ -22,3 +22,7 @@ output "RDS_Endpoint" {
   value = aws_db_instance.two_tier_db.endpoint
 }
 
+output "alb_dns_from_module" {
+  value = module.alb.lb_dns
+}
+

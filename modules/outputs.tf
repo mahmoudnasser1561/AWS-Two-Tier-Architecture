@@ -23,3 +23,8 @@ output "vpc_id" {
   value       = aws_vpc.two-tier-vpc.id
 }
 
+output "lb_dns" {
+  description = "DNS of the alb"
+  value = aws_lb.two-tier-lb.dns_name
+}
+

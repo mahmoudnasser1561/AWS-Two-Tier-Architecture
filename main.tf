@@ -7,6 +7,11 @@ module "vpc" {
   region = var.main_region
 }
 
+module "alb" {
+  source = "./modules"
+}
+
+
 resource "aws_key_pair" "two_tier_key" {
   key_name   = "two-tier-key"
   public_key = file(var.public_key_path)
