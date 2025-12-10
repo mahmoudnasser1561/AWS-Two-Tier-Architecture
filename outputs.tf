@@ -19,7 +19,7 @@ output "PublicIP2" {
 }
 
 output "RDS_Endpoint" {
-  value = aws_db_instance.two_tier_db.endpoint
+  value = module.db.db_endpoint
 }
 
 output "alb_dns_from_module" {

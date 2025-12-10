@@ -13,6 +13,15 @@ module "alb" {
   private_subnet_ids  = module.vpc.private_subnet_ids
 }
 
+module "db" {
+  source            = "./modules/db"
+  vpc_id            = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids 
+  ec2_sg_id         = aws_security_group.two_tier_sg.id
+  db_username       = var.db_username
+  db_password       = var.db_password
+}
+
 data "aws_ssm_parameter" "two-tier-ami" {
   name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 }
@@ -108,49 +117,3 @@ resource "aws_instance" "two-tier-instance2" {
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.two_tier_sg.id]
 }
-
-resource "aws_security_group" "rds_sg" {
-  name   = "two-tier-rds-sg"
-  vpc_id = module.vpc.vpc_id
-
-  # Allow MySQL (3306) only from the EC2 SG
-  ingress {
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.two_tier_sg.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_db_subnet_group" "two_tier_db" {
-  name       = "two_tier_db"
-  subnet_ids = [module.vpc.subnet_id3, module.vpc.subnet_id4]
-
-  tags = {
-    Name = "two_tier_db"
-  }
-}
-
-resource "aws_db_instance" "two_tier_db" {
-  allocated_storage       = 10
-  engine                  = "mysql"
-  engine_version          = "5.7"
-  instance_class          = "db.t2.micro"
-  db_name                 = "two_tier_db"
-  username                = var.db_username
-  password                = var.db_password
-  db_subnet_group_name    = aws_db_subnet_group.two_tier_db.name
-  vpc_security_group_ids  = [aws_security_group.rds_sg.id]
-  parameter_group_name    = "default.mysql5.7"
-  skip_final_snapshot     = true
-  multi_az = true
-}
-
-
