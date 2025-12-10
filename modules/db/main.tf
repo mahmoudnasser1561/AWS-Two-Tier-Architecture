@@ -27,12 +27,32 @@ resource "aws_db_subnet_group" "two_tier_db" {
   }
 }
 
+
+resource "aws_ssm_parameter" "db_username" {
+  name  = "/db/username"
+  type  = "String"
+  value = var.db_username
+}
+
+resource "aws_ssm_parameter" "db_password" {
+  name  = "/db/password"
+  type  = "SecureString"
+  value = var.db_password
+}
+
+resource "aws_ssm_parameter" "db_name" {
+  name  = "/db/name"
+  type  = "String"
+  value = "two_tier_db" 
+}
+
 resource "aws_db_instance" "two_tier_db" {
   allocated_storage       = 10
   engine                  = "mysql"
   engine_version          = "5.7"
   instance_class          = "db.t2.micro"
   db_name                 = "two_tier_db"
+  identifier              = "two-tier-db"
   username                = var.db_username
   password                = var.db_password
   db_subnet_group_name    = aws_db_subnet_group.two_tier_db.name

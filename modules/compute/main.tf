@@ -35,6 +35,42 @@ resource "aws_security_group" "two_tier_sg" {
   }
 }
 
+resource "aws_iam_role" "ec2_role" {
+  name = "two-tier-ec2-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "ec2_policy" {
+  role = aws_iam_role.ec2_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["ssm:GetParameter", "ssm:GetParameters", "rds:DescribeDBInstances"]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "ec2_profile" {
+  role = aws_iam_role.ec2_role.name
+}
+
 resource "aws_launch_template" "two_tier_lt" {
   name_prefix   = "two-tier-lt-"
   image_id      = data.aws_ssm_parameter.two-tier-ami.value
@@ -43,8 +79,45 @@ resource "aws_launch_template" "two_tier_lt" {
 
   vpc_security_group_ids = [aws_security_group.two_tier_sg.id]
 
+  iam_instance_profile {
+    arn = aws_iam_instance_profile.ec2_profile.arn
+  }
+
   user_data = base64encode(<<-EOF
     #!/bin/bash
+    yum update -y
+    yum install -y httpd php php-mysqlnd awscli  
+    systemctl start httpd
+    systemctl enable httpd
+
+    # Fetch RDS details at runtime
+    REGION="us-east-1" 
+    DB_IDENTIFIER="two-tier-db" 
+    ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier $DB_IDENTIFIER --query "DBInstances[0].Endpoint.Address" --output text --region $REGION)
+    DB_NAME=$(aws ssm get-parameter --name /db/name --query "Parameter.Value" --output text --region $REGION)
+    USER=$(aws ssm get-parameter --name /db/username --query "Parameter.Value" --output text --region $REGION)
+    PASS=$(aws ssm get-parameter --name /db/password --with-decryption --query "Parameter.Value" --output text --region $REGION)
+
+    cat <<PHP_EOF > /var/www/html/index.php
+    
+    <?php
+    \$servername = "$ENDPOINT";
+    \$username = "$USER";
+    \$password = "$PASS";
+    \$dbname = "$DB_NAME";
+
+    try {
+        \$conn = new PDO("mysql:host=\$servername;dbname=\$dbname", \$username, \$password, [PDO::ATTR_PERSISTENT => true]);
+        \$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        echo "Connected successfully to the database!<br>";
+
+    } catch(PDOException \$e) {
+        echo "Connection failed: " . \$e->getMessage();
+    }
+    ?>
+    PHP_EOF
+
+    chown -R apache:apache /var/www/html
     EOF
   )
 
