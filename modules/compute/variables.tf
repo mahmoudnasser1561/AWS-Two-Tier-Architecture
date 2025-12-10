@@ -22,3 +22,8 @@ variable "public_key_path" {
   description = "Path to the public key file"
   type        = string
 }
+
+variable "target_group_arn" {
+  description = "ARN of the target group"
+  type = string
+}
