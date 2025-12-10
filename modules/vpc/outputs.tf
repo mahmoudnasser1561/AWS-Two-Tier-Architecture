@@ -5,7 +5,7 @@ output "vpc_id" {
 
 output "alb_public_subnet_ids" {
   description = "List of public subnet IDs for ALB"
-  value       = [aws_subnet.alb_pub1.id, aws_subnet.alb_pub2.id]
+  value       = [aws_subnet.nat_pub.id, aws_subnet.bastion_pub.id]
 }
 
 output "web_private_subnet_ids" {

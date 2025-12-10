@@ -5,24 +5,6 @@ resource "aws_vpc" "two-tier-vpc" {
   }
 }
 
-resource "aws_subnet" "alb_pub1" {
-  vpc_id            = aws_vpc.two-tier-vpc.id
-  cidr_block        = "10.0.5.0/24"
-  availability_zone = "us-east-1a"
-  tags = {
-    Name = "AlbPub1"
-  }
-}
-
-resource "aws_subnet" "alb_pub2" {
-  vpc_id            = aws_vpc.two-tier-vpc.id
-  cidr_block        = "10.0.6.0/24"
-  availability_zone = "us-east-1b"
-  tags = {
-    Name = "AlbPub2"
-  }
-}
-
 resource "aws_subnet" "bastion_pub" {
   vpc_id            = aws_vpc.two-tier-vpc.id
   cidr_block        = "10.0.7.0/24"
@@ -94,16 +76,6 @@ resource "aws_route" "public_internet" {
   route_table_id         = aws_route_table.public.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.two-tier-ig.id
-}
-
-resource "aws_route_table_association" "alb_pub1" {
-  subnet_id      = aws_subnet.alb_pub1.id
-  route_table_id = aws_route_table.public.id
-}
-
-resource "aws_route_table_association" "alb_pub2" {
-  subnet_id      = aws_subnet.alb_pub2.id
-  route_table_id = aws_route_table.public.id
 }
 
 resource "aws_route_table_association" "bastion_pub" {
