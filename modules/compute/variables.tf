@@ -3,9 +3,8 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "public_subnet_ids" {
-  description = "List of public subnet IDs for the instances"
-  type        = list(string)
+variable "web_private_subnet_ids" {
+  type = list(string)
 }
 
 variable "alb_sg_id" {
@@ -25,5 +24,9 @@ variable "public_key_path" {
 
 variable "target_group_arn" {
   description = "ARN of the target group"
+  type = string
+}
+
+variable "bastion_subnet_id" {
   type = string
 }

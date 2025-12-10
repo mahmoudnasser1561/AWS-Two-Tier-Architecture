@@ -1,48 +1,71 @@
 resource "aws_vpc" "two-tier-vpc" {
   cidr_block = "10.0.0.0/16"
-
   tags = {
     Name = "TTVPC"
   }
 }
 
-resource "aws_subnet" "two-tier-subnet-public-1" {
+resource "aws_subnet" "alb_pub1" {
+  vpc_id            = aws_vpc.two-tier-vpc.id
+  cidr_block        = "10.0.5.0/24"
+  availability_zone = "us-east-1a"
+  tags = {
+    Name = "AlbPub1"
+  }
+}
+
+resource "aws_subnet" "alb_pub2" {
+  vpc_id            = aws_vpc.two-tier-vpc.id
+  cidr_block        = "10.0.6.0/24"
+  availability_zone = "us-east-1b"
+  tags = {
+    Name = "AlbPub2"
+  }
+}
+
+resource "aws_subnet" "bastion_pub" {
+  vpc_id            = aws_vpc.two-tier-vpc.id
+  cidr_block        = "10.0.7.0/24"
+  availability_zone = "us-east-1a"
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "BastionPub"
+  }
+}
+
+resource "aws_subnet" "web_priv1" {
   vpc_id            = aws_vpc.two-tier-vpc.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-east-1a"
-
   tags = {
-    Name = "Pub1"
+    Name = "WebPriv1"
   }
 }
 
-resource "aws_subnet" "two-tier-subnet-public-2" {
+resource "aws_subnet" "web_priv2" {
   vpc_id            = aws_vpc.two-tier-vpc.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-east-1b"
-
   tags = {
-    Name = "Pub2"
+    Name = "WebPriv2"
   }
 }
 
-resource "aws_subnet" "two-tier-subnet-private-1" {
+resource "aws_subnet" "db_priv1" {
   vpc_id            = aws_vpc.two-tier-vpc.id
   cidr_block        = "10.0.3.0/24"
   availability_zone = "us-east-1a"
-
   tags = {
-    Name = "Priv1"
+    Name = "DbPriv1"
   }
 }
 
-resource "aws_subnet" "two-tier-subnet-private-2" {
+resource "aws_subnet" "db_priv2" {
   vpc_id            = aws_vpc.two-tier-vpc.id
   cidr_block        = "10.0.4.0/24"
   availability_zone = "us-east-1b"
-
   tags = {
-    Name = "Priv2"
+    Name = "DbPriv2"
   }
 }
 
@@ -63,17 +86,21 @@ resource "aws_route" "public_internet" {
   gateway_id             = aws_internet_gateway.two-tier-ig.id
 }
 
-resource "aws_route_table_association" "public1" {
-  subnet_id      = aws_subnet.two-tier-subnet-public-1.id
+resource "aws_route_table_association" "alb_pub1" {
+  subnet_id      = aws_subnet.alb_pub1.id
   route_table_id = aws_route_table.public.id
 }
 
-resource "aws_route_table_association" "public2" {
-  subnet_id      = aws_subnet.two-tier-subnet-public-2.id
+resource "aws_route_table_association" "alb_pub2" {
+  subnet_id      = aws_subnet.alb_pub2.id
   route_table_id = aws_route_table.public.id
 }
 
-# NAT Gateway for private subnets
+resource "aws_route_table_association" "bastion_pub" {
+  subnet_id      = aws_subnet.bastion_pub.id
+  route_table_id = aws_route_table.public.id
+}
+
 resource "aws_eip" "nat" {
   tags = {
     Name = "nat-eip"
@@ -82,26 +109,35 @@ resource "aws_eip" "nat" {
 
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
-  subnet_id      = aws_subnet.two-tier-subnet-public-1.id
+  subnet_id     = aws_subnet.bastion_pub.id
 }
 
-# Private Route Table
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.two-tier-vpc.id
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat.id
-  }
 }
 
-# Associate private subnets with private route table
-resource "aws_route_table_association" "private1" {
-  subnet_id      = aws_subnet.two-tier-subnet-private-1.id
+resource "aws_route" "private_nat" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat.id
+}
+
+resource "aws_route_table_association" "web_priv1" {
+  subnet_id      = aws_subnet.web_priv1.id
   route_table_id = aws_route_table.private.id
 }
 
-resource "aws_route_table_association" "private2" {
-  subnet_id      = aws_subnet.two-tier-subnet-private-2.id
+resource "aws_route_table_association" "web_priv2" {
+  subnet_id      = aws_subnet.web_priv2.id
+  route_table_id = aws_route_table.private.id
+}
+
+resource "aws_route_table_association" "db_priv1" {
+  subnet_id      = aws_subnet.db_priv1.id
+  route_table_id = aws_route_table.private.id
+}
+
+resource "aws_route_table_association" "db_priv2" {
+  subnet_id      = aws_subnet.db_priv2.id
   route_table_id = aws_route_table.private.id
 }

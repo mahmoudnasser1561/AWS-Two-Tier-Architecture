@@ -12,11 +12,11 @@ resource "aws_security_group" "two_tier_sg" {
   vpc_id = var.vpc_id
 
   ingress {
-    description = "SSH from my IP"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${var.my_ip}/32"]
+    description     = "SSH from bastion"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion_sg.id]
   }
 
   ingress {
@@ -33,6 +33,35 @@ resource "aws_security_group" "two_tier_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_security_group" "bastion_sg" {
+  name   = "bastion-sg"
+  vpc_id = var.vpc_id
+
+  ingress {
+    description = "SSH from my IP"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["${var.my_ip}/32"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "bastion" {
+  ami                         = data.aws_ssm_parameter.two-tier-ami.value
+  instance_type               = "t2.micro"
+  subnet_id                   = var.bastion_subnet_id
+  key_name                    = aws_key_pair.two_tier_key.key_name
+  associate_public_ip_address = true
+  vpc_security_group_ids      = [aws_security_group.bastion_sg.id]
 }
 
 resource "aws_iam_role" "ec2_role" {
@@ -132,7 +161,7 @@ resource "aws_autoscaling_group" "two_tier_asg" {
   max_size            = 4  
   desired_capacity    = 2
   health_check_type   = "ELB"
-  vpc_zone_identifier = var.public_subnet_ids  
+  vpc_zone_identifier = var.web_private_subnet_ids 
 
   launch_template {
     id      = aws_launch_template.two_tier_lt.id
