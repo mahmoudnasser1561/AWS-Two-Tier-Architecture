@@ -101,55 +101,45 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 }
 
 resource "aws_launch_template" "two_tier_lt" {
-  name_prefix   = "two-tier-lt-"
-  image_id      = data.aws_ssm_parameter.two-tier-ami.value
+  name_prefix = "two-tier-lt-"
+  image_id = data.aws_ssm_parameter.two-tier-ami.value
   instance_type = "t2.micro"
-  key_name      = aws_key_pair.two_tier_key.key_name
-
+  key_name = aws_key_pair.two_tier_key.key_name
   vpc_security_group_ids = [aws_security_group.two_tier_sg.id]
-
   iam_instance_profile {
     arn = aws_iam_instance_profile.ec2_profile.arn
   }
-
   user_data = base64encode(<<-EOF
     #!/bin/bash
     yum update -y
-    yum install -y httpd php php-mysqlnd awscli  
+    yum install -y httpd php php-pgsql awscli
     systemctl start httpd
     systemctl enable httpd
-
     # Fetch RDS details at runtime
-    REGION="us-east-1" 
-    DB_IDENTIFIER="two-tier-db" 
+    REGION="us-east-1"
+    DB_IDENTIFIER="two-tier-db"
     ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier $DB_IDENTIFIER --query "DBInstances[0].Endpoint.Address" --output text --region $REGION)
     DB_NAME=$(aws ssm get-parameter --name /db/name --query "Parameter.Value" --output text --region $REGION)
     USER=$(aws ssm get-parameter --name /db/username --query "Parameter.Value" --output text --region $REGION)
     PASS=$(aws ssm get-parameter --name /db/password --with-decryption --query "Parameter.Value" --output text --region $REGION)
-
     cat <<PHP_EOF > /var/www/html/index.php
-    
     <?php
     \$servername = "$ENDPOINT";
     \$username = "$USER";
     \$password = "$PASS";
     \$dbname = "$DB_NAME";
-
     try {
-        \$conn = new PDO("mysql:host=\$servername;dbname=\$dbname", \$username, \$password, [PDO::ATTR_PERSISTENT => true]);
+        \$conn = new PDO("pgsql:host=\$servername;dbname=\$dbname", \$username, \$password, [PDO::ATTR_PERSISTENT => true]);
         \$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         echo "Connected successfully to the database!<br>";
-
     } catch(PDOException \$e) {
         echo "Connection failed: " . \$e->getMessage();
     }
-    ?>
+?>
     PHP_EOF
-
     chown -R apache:apache /var/www/html
     EOF
   )
-
   lifecycle {
     create_before_destroy = true
   }
