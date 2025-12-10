@@ -13,6 +13,12 @@ variable "ec2_sg_id" {
   type        = string
 }
 
+variable "backup_retention_period" {
+  type        = number
+  default     = 7
+  description = "The number of days to retain automated backups."
+}
+
 variable "db_username" {
   description = "RDS username"
   type        = string

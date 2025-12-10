@@ -18,6 +18,7 @@ module "db" {
   vpc_id            = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids 
   ec2_sg_id          = module.compute.ec2_sg_id
+  backup_retention_period = 14
   db_username       = var.db_username
   db_password       = var.db_password
 }
