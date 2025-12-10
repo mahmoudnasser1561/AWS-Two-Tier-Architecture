@@ -22,3 +22,8 @@ output "bastion_public_subnet_id" {
   description = "Public subnet ID for Bastion and NAT"
   value       = aws_subnet.bastion_pub.id
 }
+
+output "NAT_public_subnet_id" {
+  description = "Public subnet ID for Bastion and NAT"
+  value       = aws_subnet.nat_pub.id
+}
