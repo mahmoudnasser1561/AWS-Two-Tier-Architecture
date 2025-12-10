@@ -1,21 +1,21 @@
 output "PrivateIP" {
-  description = "Private IP of EC2 instance"
-  value       = aws_instance.two-tier-instance1.private_ip
+  description = "Private IP of EC2 instance 1"
+  value       = module.compute.instance1_private_ip
 }
 
 output "PrivateIP2" {
-  description = "Private IP of EC2 instance"
-  value       = aws_instance.two-tier-instance2.private_ip
+  description = "Private IP of EC2 instance 2"
+  value       = module.compute.instance2_private_ip
 }
 
 output "PublicIP" {
   description = "Public IP of EC2 instance 1"
-  value       = aws_instance.two-tier-instance1.public_ip
+  value       = module.compute.instance1_public_ip
 }
 
 output "PublicIP2" {
   description = "Public IP of EC2 instance 2"
-  value       = aws_instance.two-tier-instance2.public_ip
+  value       = module.compute.instance2_public_ip
 }
 
 output "RDS_Endpoint" {
