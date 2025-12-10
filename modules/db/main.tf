@@ -2,11 +2,10 @@ resource "aws_security_group" "rds_sg" {
   name        = "two-tier-rds-sg"
   vpc_id      = var.vpc_id 
 
-  # Allow Postgres (5432) only from the EC2 SG
+  # Allow MySQL (3306) only from the EC2 SG
   ingress {
-    description     = "Allow Postgres from EC2 SG"
-    from_port       = 5432
-    to_port         = 5432
+    from_port       = 3306
+    to_port         = 3306
     protocol        = "tcp"
     security_groups = [var.ec2_sg_id]
   }
@@ -49,19 +48,17 @@ resource "aws_ssm_parameter" "db_name" {
 
 resource "aws_db_instance" "two_tier_db" {
   allocated_storage       = 10
-  engine                  = "postgres"
-  engine_version          = "14.7"
+  engine                  = "mysql"
+  engine_version          = "5.7"
   instance_class          = "db.t2.micro"
-
   db_name                 = "two_tier_db"
   identifier              = "two-tier-db"
   username                = var.db_username
   password                = var.db_password
   db_subnet_group_name    = aws_db_subnet_group.two_tier_db.name
   vpc_security_group_ids  = [aws_security_group.rds_sg.id]
-
+  parameter_group_name    = "default.mysql5.7"
   backup_retention_period = var.backup_retention_period
-  parameter_group_name    = "default.postgres14"
   skip_final_snapshot     = true
   multi_az = true
 }
