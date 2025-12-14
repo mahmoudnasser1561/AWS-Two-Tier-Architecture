@@ -8,5 +8,5 @@
 - Terraform remote state management via s3 bucket
 - DynamoDB Table for state locking
 - CI/CD with github actions
-- monitoring with cloudwatch
+- monitoring with cloudwatch extended to prometheus - > Grafana
 - ASG Notifications to SNS Topic
