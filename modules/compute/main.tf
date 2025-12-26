@@ -92,6 +92,11 @@ resource "aws_iam_role_policy" "ec2_policy" {
         Action   = ["ssm:GetParameter", "ssm:GetParameters", "rds:DescribeDBInstances"]
         Resource = "*"
       },
+      {
+      Effect   = "Allow"
+      Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "cloudwatch:PutMetricData"]
+      Resource = "*"
+      }
     ]
   })
 }
@@ -112,43 +117,55 @@ resource "aws_launch_template" "two_tier_lt" {
     arn = aws_iam_instance_profile.ec2_profile.arn
   }
 
-  user_data = base64encode(<<-EOF
-    #!/bin/bash
-    yum update -y
-    yum install -y httpd php php-mysqlnd awscli  
-    systemctl start httpd
-    systemctl enable httpd
+ user_data = base64encode(<<-EOF
+  #!/bin/bash
+  set -e
 
-    # Fetch RDS details at runtime
-    REGION="us-east-1" 
-    DB_IDENTIFIER="two-tier-db" 
-    ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier $DB_IDENTIFIER --query "DBInstances[0].Endpoint.Address" --output text --region $REGION)
-    DB_NAME=$(aws ssm get-parameter --name /db/name --query "Parameter.Value" --output text --region $REGION)
-    USER=$(aws ssm get-parameter --name /db/username --query "Parameter.Value" --output text --region $REGION)
-    PASS=$(aws ssm get-parameter --name /db/password --with-decryption --query "Parameter.Value" --output text --region $REGION)
+  # Update and install packages
+  yum update -y
+  yum install -y httpd awscli amazon-cloudwatch-agent
 
-    cat <<PHP_EOF > /var/www/html/index.php
-    
-    <?php
-    \$servername = "$ENDPOINT";
-    \$username = "$USER";
-    \$password = "$PASS";
-    \$dbname = "$DB_NAME";
+  # Start and enable Apache
+  systemctl start httpd
+  systemctl enable httpd
 
-    try {
-        \$conn = new PDO("mysql:host=\$servername;dbname=\$dbname", \$username, \$password, [PDO::ATTR_PERSISTENT => true]);
-        \$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        echo "Connected successfully to the database!<br>";
+  # Ensure /var/www/html ownership
+  chown -R apache:apache /var/www/html
 
-    } catch(PDOException \$e) {
-        echo "Connection failed: " . \$e->getMessage();
+  # CloudWatch Agent configuration
+  cat <<AGENT_EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+  {
+    "logs": {
+      "logs_collected": {
+        "files": {
+          "collect_list": [
+            {
+              "file_path": "/var/log/httpd/access_log",
+              "log_group_name": "/ec2/two-tier/apache",
+              "log_stream_name": "{instance_id}/access_log"
+            },
+            {
+              "file_path": "/var/log/httpd/error_log",
+              "log_group_name": "/ec2/two-tier/apache",
+              "log_stream_name": "{instance_id}/error_log"
+            }
+          ]
+        }
+      }
     }
-    ?>
-    PHP_EOF
+  }
+  AGENT_EOF
 
-    chown -R apache:apache /var/www/html
-    EOF
-  )
+  /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+    -a fetch-config \
+    -m ec2 \
+    -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
+    -s
+
+  systemctl enable amazon-cloudwatch-agent
+EOF
+)
+
 
   lifecycle {
     create_before_destroy = true
