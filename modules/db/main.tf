@@ -61,5 +61,8 @@ resource "aws_db_instance" "two_tier_db" {
   backup_retention_period = var.backup_retention_period
   skip_final_snapshot     = true
   multi_az = true
+  performance_insights_enabled = true  
+  monitoring_interval          = 60    
+  enabled_cloudwatch_logs_exports = ["error", "general", "slowquery"] 
 }
 
