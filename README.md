@@ -1,7 +1,7 @@
 # AWS-Two-Tier-Architecture
 
 # ARCH 
-<img width="1411" height="762" alt="3-tier drawio2" src="https://github.com/user-attachments/assets/41533064-26b7-4526-9a5e-690004751f2a" />
+<img width="1617" height="1082" alt="updated_Arch drawio" src="https://github.com/user-attachments/assets/f601dd9f-cf19-453c-9327-8de9fd441247" />
 
 
 # TO-DO
@@ -9,4 +9,3 @@
 - DynamoDB Table for state locking
 - CI/CD with github actions
 - monitoring with cloudwatch extended to prometheus - > Grafana
-- ASG Notifications to SNS Topic
