@@ -22,3 +22,7 @@ variable "public_key_path" {
   default = "/home/mahmoud/.ssh/prod.pub"
 }
 
+variable "notification_email" {
+  description = "email address for ASG notifications"
+  type        = string
+}
