@@ -34,5 +34,9 @@ module "compute" {
   alb_sg_id = module.alb.alb_sg_id
 }
 
+module "monitoring" {
+  source = "./modules/monitoring"
 
-
+  asg_name        = module.compute.asg_name
+  email_address   = var.notification_email
+}
