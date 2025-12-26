@@ -4,7 +4,8 @@ output "ec2_sg_id" {
 }
 
 output "asg_name" {
-  value = aws_autoscaling_group.two_tier_asg.name
+  description = "Name of the Auto Scaling Group"
+  value       = aws_autoscaling_group.two_tier_asg.name
 }
 
 output "bastion_public_ip" {
