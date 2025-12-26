@@ -1,7 +1,7 @@
 # AWS-Two-Tier-Architecture
 
 # ARCH 
-<img width="1617" height="1082" alt="updated_Arch drawio" src="https://github.com/user-attachments/assets/f601dd9f-cf19-453c-9327-8de9fd441247" />
+<img width="1617" height="1082" alt="updated_Arch drawio" src="https://github.com/user-attachments/assets/45bfac3f-c489-4801-b67f-cc3542e5f375" />
 
 
 # TO-DO
