@@ -1,3 +1,13 @@
+terraform {
+  backend "s3" {
+    bucket               = "two-tier-tf-state-bucket-tf" 
+    key                  = "terraform.tfstate" 
+    region               = "us-east-1"
+    encrypt              = true  
+    skip_credentials_validation = true 
+  }
+}
+
 provider "aws" {
   region = var.main_region
 }
