@@ -1,7 +1,7 @@
 # AWS-Two-Tier-Architecture
 
 # ARCH 
-<img width="1617" height="1371" alt="new_updated_Arch drawio" src="https://github.com/user-attachments/assets/634f66f1-906a-4181-b07b-e56bef572c87" />
+<img width="1617" height="1371" alt="new_updated_Arch drawio" src="https://github.com/user-attachments/assets/bc3d3f08-96b8-4af0-b189-adfd3f11579e" />
 
 
 The architecture includes production-grade services such as:
