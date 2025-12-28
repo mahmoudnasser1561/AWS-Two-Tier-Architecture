@@ -40,3 +40,8 @@ module "monitoring" {
   asg_name        = module.compute.asg_name
   email_address   = var.notification_email
 }
+
+module "waf" {
+  source   = "./modules/waf"
+  alb_arn  = module.alb.lb_arn  
+}
