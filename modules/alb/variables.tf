@@ -12,3 +12,8 @@ variable "private_subnet_ids" {
   description = "List of private subnet IDs"
   type        = list(string)
 }
+
+variable "logs_bucket_name" {
+  description = "Bucket name for logs"
+  type = string
+}

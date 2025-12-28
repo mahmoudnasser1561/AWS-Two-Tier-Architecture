@@ -27,6 +27,12 @@ resource "aws_lb" "two-tier-lb" {
   tags = {
     Name = "TTLB"
   }
+
+  access_logs {
+    bucket  = var.logs_bucket_name
+    prefix  = "alb-logs"
+    enabled = true
+  }
 }
 
 resource "aws_lb_target_group" "two-tier-tg" {
