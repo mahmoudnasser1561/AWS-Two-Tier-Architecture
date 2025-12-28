@@ -1,4 +1,4 @@
 variable "alb_arn" {
-  description = "ARN of the ALB to associate with WAF"
+  description = "ARN of the ALB"
   type        = string
 }

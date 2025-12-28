@@ -11,6 +11,7 @@ module "alb" {
   vpc_id              = module.vpc.vpc_id
   public_subnet_ids = module.vpc.alb_public_subnet_ids 
   private_subnet_ids = module.vpc.db_private_subnet_ids 
+  logs_bucket_name  = module.s3_logs.logs_bucket_name
 }
 
 module "db" {
@@ -44,4 +45,9 @@ module "monitoring" {
 module "waf" {
   source   = "./modules/waf"
   alb_arn  = module.alb.lb_arn  
+}
+
+module "s3_logs" {
+  source   = "./modules/s3_logs"
+  alb_arn  = module.alb.lb_arn
 }
