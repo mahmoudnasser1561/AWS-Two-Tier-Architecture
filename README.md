@@ -1,7 +1,7 @@
 # AWS-Two-Tier-Architecture
 
 # ARCH 
-<img width="1617" height="1290" alt="new_updated_Arch drawio" src="https://github.com/user-attachments/assets/56ef0f4e-395b-4c9a-a7a1-a24a269cb9bc" />
+<img width="2215" height="1290" alt="new_updated_Arch drawio" src="https://github.com/user-attachments/assets/58524913-07bc-4077-8709-b97539a17807" />
 
 
 The architecture includes production-grade services such as:
@@ -20,5 +20,5 @@ To avoid unnecessary cloud costs, the project is validated using
 
 # TO-DO
 - CI/CD with github actions
-- monitoring with cloudwatch extended to prometheus - > Grafana
+- OpenID Provider
   
