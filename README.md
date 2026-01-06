@@ -14,8 +14,9 @@ The architecture includes production-grade services such as:
 - sns for email notification
 - ... ,etc
 
-To avoid unnecessary cloud costs, the project is validated using
-`terraform plan`, which completes successfully with no errors.
+## Plan
+<img width="1302" height="502" alt="image" src="https://github.com/user-attachments/assets/4b585b57-a85e-491b-a066-723fab083f0e" />
+
 
 
 # TO-DO
