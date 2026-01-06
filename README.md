@@ -15,7 +15,6 @@ The architecture includes production-grade services such as:
 - ... ,etc
 
 ## Plan
-<img width="1302" height="502" alt="image" src="https://github.com/user-attachments/assets/4b585b57-a85e-491b-a066-723fab083f0e" />
 
 
 
