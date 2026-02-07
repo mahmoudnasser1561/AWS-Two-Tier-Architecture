@@ -1,0 +1,51 @@
+name: Terraform CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write 
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-arn: ${{ secrets.GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: us-east-1 
+          role-session-name: GitHubActionsTerraform
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0  
+
+      - name: Terraform Init
+        run: terraform init -backend-config="bucket=two-tier-tf-state-bucket-tf" 
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        run: terraform plan -var="db_username=$$   {{ secrets.DB_USERNAME }}" -var="db_password=   $${{ secrets.DB_PASSWORD }}" -var="notification_email=$$   {{ secrets.NOTIFICATION_EMAIL }}" -var="my_ip=   $${{ secrets.MY_IP }}" -var="public_key_path=${{ secrets.PUBLIC_KEY_PATH }}"
+
+      - name: Terraform Apply (Manual)
+        if: github.event_name == 'workflow_dispatch'
+        run: terraform apply -auto-approve -var="db_username=$$   {{ secrets.DB_USERNAME }}" -var="db_password=   $${{ secrets.DB_PASSWORD }}" -var="notification_email=$$   {{ secrets.NOTIFICATION_EMAIL }}" -var="my_ip=   $${{ secrets.MY_IP }}" -var="public_key_path=${{ secrets.PUBLIC_KEY_PATH }}"
+
+      - name: Terraform Destroy (Optional Manual)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+        run: terraform destroy -auto-approve -var="db_username=$$   {{ secrets.DB_USERNAME }}" -var="db_password=   $${{ secrets.DB_PASSWORD }}" -var="notification_email=$$   {{ secrets.NOTIFICATION_EMAIL }}" -var="my_ip=   $${{ secrets.MY_IP }}" -var="public_key_path=${{ secrets.PUBLIC_KEY_PATH }}"

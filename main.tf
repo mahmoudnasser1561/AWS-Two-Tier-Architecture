@@ -61,3 +61,7 @@ module "s3_logs" {
   source   = "./modules/s3_logs"
   alb_arn  = module.alb.lb_arn
 }
+
+module "iam" {
+  source = "./modules/iam"
+}
