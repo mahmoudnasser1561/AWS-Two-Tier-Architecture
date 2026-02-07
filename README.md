@@ -45,3 +45,73 @@ Multi-AZ, secure two-tier web application with:
   - CPU & connection alarms with SNS email notifications
 - **CI/CD** — GitHub Actions workflow with plan on PR/push + manual apply/destroy
 - **State management** — remote backend in S3
+
+## Project Structure
+```
+.
+├── bootstrap.tf
+├── docs
+│   ├── graph.svg
+│   └── plan.txt
+├── main.tf
+├── modules
+│   ├── alb
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   ├── compute
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   ├── db
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   ├── iam
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   ├── monitoring
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   ├── s3_logs
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   ├── vpc
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   └── waf
+│       ├── main.tf
+│       ├── outputs.tf
+│       └── variables.tf
+├── outputs.tf
+├── README.md
+└── variables.tf
+
+10 directories, 31 files
+```
+
+## Local Deployment
+```
+terraform init
+
+terraform plan \
+  -var="db_username=username" \
+  -var="db_password=passwordr" \
+  -var="notification_email=you@example.com" \
+  -var="my_ip=203.0.113.42/32" \
+  -var="public_key_path=~/.ssh/id_rsa.pub"
+
+terraform apply
+```
+
+# Outputs 
+```
+alb_dns_from_module → public URL of application
+bastion_public_ip → SSH jump host
+RDS_Endpoint → database connection string
+github_actions_role_arn → for CI/CD setup
+```
