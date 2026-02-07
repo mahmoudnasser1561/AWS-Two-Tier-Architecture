@@ -32,7 +32,7 @@ Multi-AZ, secure two-tier web application with:
 
 - **Modular Terraform design** — clear separation of concerns (vpc, alb, compute, db, monitoring, s3_logs, waf, iam)
 - **Zero-trust networking** — no public access to web servers or database; only ALB and bastion are public-facing
-- **Auto Scaling** with target tracking (CPU 50%) + scale-out policy
+- **Auto Scaling** with target tracking (CPU 70%) + scale-out policy
 - **Security hardening**
   - Security Groups with least privilege
   - AWS WAF on ALB
