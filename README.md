@@ -1,137 +1,135 @@
-# Secure & Scalable Two-Tier Web Architecture on AWS with Terraform
+# Secure Two-Tier AWS Architecture with Terraform
 
 [![Terraform Version](https://img.shields.io/badge/Terraform-1.5+-623CE4?logo=terraform)](https://www.terraform.io)
-[![AWS Provider](https://img.shields.io/badge/AWS%20Provider-~%205.0-FF9900?logo=amazon-aws)](https://registry.terraform.io/providers/hashicorp/aws)
+[![AWS Provider](https://img.shields.io/badge/AWS%20Provider-~%206.25-FF9900?logo=amazon-aws)](https://registry.terraform.io/providers/hashicorp/aws)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Production-grade **two-tier** (web + database) infrastructure deployed entirely with **Terraform** on AWS — highly available, secure, observable, and automated via GitHub Actions with **OIDC authentication**.
+Terraform project that provisions a two-tier web architecture on AWS:
+- Web tier: private EC2 Auto Scaling Group behind an internet-facing ALB
+- Data tier: private Multi-AZ RDS MySQL
+- Supporting components: WAF, CloudWatch alarms/logs, S3 ALB access logs, OIDC-based CI role
 
-Perfect demonstration of real-world cloud engineering skills: modular IaC, least-privilege security, auto-scaling, monitoring, logging, and modern CI/CD practices.
+## Architecture Summary
+- VPC across two Availability Zones with public and private subnets
+- Single NAT Gateway for private-subnet egress (intentional cost/HA tradeoff)
+- Application Load Balancer (HTTP) with target group health checks
+- EC2 Launch Template + Auto Scaling Group for Apache web tier
+- RDS MySQL 8.0 (Multi-AZ, encrypted storage, backups, final snapshot enabled)
+- AWS WAF attached to ALB (AWS Managed Common Rule Set in blocking mode)
+- CloudWatch alarms for ASG CPU and RDS connections + SNS notifications
+- ALB access logs in hardened S3 bucket
 
-## Architecture Overview
+**High-level diagram**  
+<img width="2462" height="1290" alt="architecture diagram" src="https://github.com/user-attachments/assets/1f02a6e2-7dab-4ae4-9370-871aa4677f80" />
 
-Multi-AZ, secure two-tier web application with:
+## Intentional Tradeoffs
+- Single NAT Gateway: lower cost, lower egress high availability.
+- HTTP only on ALB: no domain/ACM cert yet, so TLS termination is deferred.
 
-- VPC with public & private subnets across 2 Availability Zones
-- Internet Gateway + NAT Gateway for outbound internet from private subnets
-- Application Load Balancer (ALB) + WAF (AWS Managed Rules)
-- Auto Scaling Group (ASG) of EC2 instances (t2.micro, Apache httpd)
-- Amazon RDS MySQL (Multi-AZ)
-- Bastion host in public subnet for secure SSH access
-- CloudWatch Logs + Metrics + Alarms + SNS notifications
-- Centralized ALB access logs in S3
-- Secrets stored in AWS SSM Parameter Store
-- GitHub Actions CI/CD pipeline using **AWS IAM OIDC federation**
+## Security Controls Implemented
+- Security groups enforce tier boundaries:
+  - ALB accepts public HTTP
+  - App instances accept HTTP only from ALB SG
+  - RDS accepts MySQL only from app SG
+  - Bastion SSH limited to a single CIDR (`my_ip`)
+- RDS storage encryption enabled
+- WAF attached and enforcing managed rules
+- S3 hardening for logs/state buckets:
+  - public access block
+  - ownership controls
+  - server-side encryption (AES256)
+  - lifecycle rules
+- OIDC trust for GitHub Actions role (no long-lived AWS access keys in CI)
 
-**High-level diagram**
-<img width="2462" height="1290" alt="new_updated_Arch drawio" src="https://github.com/user-attachments/assets/1f02a6e2-7dab-4ae4-9370-871aa4677f80" />
+## Observability
+- CloudWatch log groups for app and RDS logs
+- CloudWatch alarms:
+  - high ASG CPU
+  - high RDS database connections
+- SNS notifications for Auto Scaling events and alarms
+- ALB access logging to S3
 
-
-
-## Key Features & Best Practices Demonstrated
-
-- **Modular Terraform design** — clear separation of concerns (vpc, alb, compute, db, monitoring, s3_logs, waf, iam)
-- **Zero-trust networking** — no public access to web servers or database; only ALB and bastion are public-facing
-- **Auto Scaling** with target tracking (CPU 70%) + scale-out policy
-- **Security hardening**
-  - Security Groups with least privilege
-  - AWS WAF on ALB
-  - IAM roles & instance profiles (no access keys on instances)
-  - SSM Parameter Store for database credentials
-  - OIDC-based GitHub Actions authentication (no stored AWS secrets)
-- **Observability**
-  - CloudWatch Agent on EC2 → Apache access/error logs
-  - RDS enhanced monitoring & CloudWatch alarms
-  - CPU & connection alarms with SNS email notifications
-- **CI/CD** — GitHub Actions workflow with plan on PR/push + manual apply/destroy
-- **State management** — remote backend in S3
-
-## Project Structure
-```
+## Repository Structure
+```text
 .
-├── bootstrap
+├── bootstrap/
 │   ├── main.tf
 │   └── variables.tf
-├── docs
-│   ├── graph.svg
-│   └── plan.txt
-├── envs
-│   ├── dev
+├── envs/
+│   ├── dev/
 │   │   ├── backend.hcl
 │   │   └── terraform.tfvars
-│   ├── prod
+│   ├── stage/
 │   │   ├── backend.hcl
 │   │   └── terraform.tfvars
-│   └── stage
+│   └── prod/
 │       ├── backend.hcl
 │       └── terraform.tfvars
+├── .github/workflows/cicd.yaml
+├── modules/
+│   ├── vpc/
+│   ├── alb/
+│   ├── compute/
+│   ├── db/
+│   ├── monitoring/
+│   ├── waf/
+│   ├── s3_logs/
+│   └── iam/
+├── docs/
 ├── main.tf
-├── modules
-│   ├── alb
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   ├── compute
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   ├── db
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   ├── iam
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   ├── monitoring
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   ├── s3_logs
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   ├── vpc
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   └── waf
-│       ├── main.tf
-│       ├── outputs.tf
-│       └── variables.tf
-├── outputs.tf
-├── README.md
-└── variables.tf
-
-15 directories, 39 files
+├── variables.tf
+├── versions.tf
+└── outputs.tf
 ```
 
-## Local Deployment
-```
+## State and Environments
+- `bootstrap/` provisions remote state backend resources (S3 + DynamoDB lock table).
+- `envs/dev|stage|prod/backend.hcl` defines state key per environment.
+- `envs/dev|stage|prod/terraform.tfvars` defines non-secret environment settings.
+- Sensitive values (`db_username`, `db_password`) are passed from CLI or CI secrets.
+
+## Deployment
+1. Create backend resources:
+```bash
 cd bootstrap
 terraform init
 terraform apply
 cd ..
+```
 
+2. Deploy an environment (example: dev):
+```bash
 terraform init -backend-config=envs/dev/backend.hcl
 terraform plan \
   -var-file=envs/dev/terraform.tfvars \
-  -var="db_username=username" \
-  -var="db_password=password"
-
-terraform apply
+  -var="db_username=<db_username>" \
+  -var="db_password=<db_password>"
+terraform apply \
+  -var-file=envs/dev/terraform.tfvars \
+  -var="db_username=<db_username>" \
+  -var="db_password=<db_password>"
 ```
 
-## Environment Strategy
-- `envs/dev`, `envs/stage`, `envs/prod` each have:
-- `backend.hcl` for remote-state config (`key` is environment-specific).
-- `terraform.tfvars` for non-secret environment defaults.
-- Keep secrets (`db_username`, `db_password`) out of tfvars; pass them with CLI vars or CI secrets.
-
-# Outputs 
+3. Destroy:
+```bash
+terraform destroy \
+  -var-file=envs/dev/terraform.tfvars \
+  -var="db_username=<db_username>" \
+  -var="db_password=<db_password>"
 ```
-alb_dns_from_module → public URL of application
-bastion_public_ip → SSH jump host
-RDS_Endpoint → database connection string
-github_actions_role_arn → for CI/CD setup
+
+## CI/CD
+- GitHub Actions workflow: `.github/workflows/cicd.yaml`
+- Auth: AWS IAM OIDC role assumption
+- Flow:
+  - push / PR: `init` + `validate` + `plan`
+  - manual dispatch: `plan`, `apply`, or `destroy` with selected environment
+
+
+## Outputs
+```text
+alb_dns_from_module    -> public URL of application
+bastion_public_ip      -> bastion host public IP
+RDS_Endpoint           -> database endpoint
+github_actions_role_arn -> IAM role ARN for GitHub Actions
 ```
