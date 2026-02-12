@@ -7,11 +7,32 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:  
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - stage
+          - prod
+      action:
+        description: "Terraform action"
+        required: true
+        default: "plan"
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    env:
+      TF_ENV: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'dev' }}
     permissions:
       id-token: write 
       contents: read
@@ -33,19 +54,19 @@ jobs:
           terraform_version: 1.5.0  
 
       - name: Terraform Init
-        run: terraform init -backend-config="bucket=two-tier-tf-state-bucket-tf" 
+        run: terraform init -backend-config="envs/${TF_ENV}/backend.hcl"
 
       - name: Terraform Validate
         run: terraform validate
 
       - name: Terraform Plan
-        if: github.event_name == 'pull_request' || github.event_name == 'push'
-        run: terraform plan -var="db_username=${{ secrets.DB_USERNAME }}" -var="db_password=${{ secrets.DB_PASSWORD }}" -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}" -var="my_ip=${{ secrets.MY_IP }}" -var="public_key_path=${{ secrets.PUBLIC_KEY_PATH }}"
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.action == 'plan'
+        run: terraform plan -var-file="envs/${TF_ENV}/terraform.tfvars" -var="db_username=${{ secrets.DB_USERNAME }}" -var="db_password=${{ secrets.DB_PASSWORD }}" -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}" -var="my_ip=${{ secrets.MY_IP }}" -var="public_key_path=${{ secrets.PUBLIC_KEY_PATH }}"
 
       - name: Terraform Apply (Manual)
-        if: github.event_name == 'workflow_dispatch'
-        run: terraform apply -auto-approve -var="db_username=${{ secrets.DB_USERNAME }}" -var="db_password=${{ secrets.DB_PASSWORD }}" -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}" -var="my_ip=${{ secrets.MY_IP }}" -var="public_key_path=${{ secrets.PUBLIC_KEY_PATH }}"
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+        run: terraform apply -auto-approve -var-file="envs/${TF_ENV}/terraform.tfvars" -var="db_username=${{ secrets.DB_USERNAME }}" -var="db_password=${{ secrets.DB_PASSWORD }}" -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}" -var="my_ip=${{ secrets.MY_IP }}" -var="public_key_path=${{ secrets.PUBLIC_KEY_PATH }}"
 
       - name: Terraform Destroy (Optional Manual)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
-        run: terraform destroy -auto-approve -var="db_username=${{ secrets.DB_USERNAME }}" -var="db_password=${{ secrets.DB_PASSWORD }}" -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}" -var="my_ip=${{ secrets.MY_IP }}" -var="public_key_path=${{ secrets.PUBLIC_KEY_PATH }}"
+        run: terraform destroy -auto-approve -var-file="envs/${TF_ENV}/terraform.tfvars" -var="db_username=${{ secrets.DB_USERNAME }}" -var="db_password=${{ secrets.DB_PASSWORD }}" -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}" -var="my_ip=${{ secrets.MY_IP }}" -var="public_key_path=${{ secrets.PUBLIC_KEY_PATH }}"

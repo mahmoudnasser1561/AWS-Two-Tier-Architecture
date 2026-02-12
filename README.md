@@ -49,10 +49,22 @@ Multi-AZ, secure two-tier web application with:
 ## Project Structure
 ```
 .
-├── bootstrap.tf
+├── bootstrap
+│   ├── main.tf
+│   └── variables.tf
 ├── docs
 │   ├── graph.svg
 │   └── plan.txt
+├── envs
+│   ├── dev
+│   │   ├── backend.hcl
+│   │   └── terraform.tfvars
+│   ├── prod
+│   │   ├── backend.hcl
+│   │   └── terraform.tfvars
+│   └── stage
+│       ├── backend.hcl
+│       └── terraform.tfvars
 ├── main.tf
 ├── modules
 │   ├── alb
@@ -91,22 +103,30 @@ Multi-AZ, secure two-tier web application with:
 ├── README.md
 └── variables.tf
 
-10 directories, 31 files
+15 directories, 39 files
 ```
 
 ## Local Deployment
 ```
+cd bootstrap
 terraform init
+terraform apply
+cd ..
 
+terraform init -backend-config=envs/dev/backend.hcl
 terraform plan \
+  -var-file=envs/dev/terraform.tfvars \
   -var="db_username=username" \
-  -var="db_password=passwordr" \
-  -var="notification_email=you@example.com" \
-  -var="my_ip=203.0.113.42/32" \
-  -var="public_key_path=~/.ssh/id_rsa.pub"
+  -var="db_password=password"
 
 terraform apply
 ```
+
+## Environment Strategy
+- `envs/dev`, `envs/stage`, `envs/prod` each have:
+- `backend.hcl` for remote-state config (`key` is environment-specific).
+- `terraform.tfvars` for non-secret environment defaults.
+- Keep secrets (`db_username`, `db_password`) out of tfvars; pass them with CLI vars or CI secrets.
 
 # Outputs 
 ```
