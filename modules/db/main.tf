@@ -1,3 +1,7 @@
+locals {
+  db_identifier = "${var.project_name}-${var.environment}-db"
+}
+
 resource "aws_security_group" "rds_sg" {
   name   = "two-tier-rds-sg"
   vpc_id = var.vpc_id
@@ -52,7 +56,7 @@ resource "aws_db_instance" "two_tier_db" {
   engine_version                  = "8.0"
   instance_class                  = "db.t3.micro"
   db_name                         = "two_tier_db"
-  identifier                      = "two-tier-db"
+  identifier                      = local.db_identifier
   storage_encrypted               = true
   username                        = var.db_username
   password                        = var.db_password

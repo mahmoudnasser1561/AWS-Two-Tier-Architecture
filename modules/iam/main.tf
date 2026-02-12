@@ -1,3 +1,8 @@
+locals {
+  github_actions_role_name   = "${var.project_name}-${var.environment}-github-actions-role"
+  github_actions_policy_name = "${var.project_name}-${var.environment}-github-actions-policy"
+}
+
 resource "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
 
@@ -12,7 +17,7 @@ resource "aws_iam_openid_connect_provider" "github" {
 }
 
 resource "aws_iam_role" "github_actions_role" {
-  name = "github-actions-terraform-role"
+  name = local.github_actions_role_name
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -37,7 +42,7 @@ resource "aws_iam_role" "github_actions_role" {
 }
 
 resource "aws_iam_role_policy" "github_actions_terraform_policy" {
-  name = "github-actions-terraform-policy"
+  name = local.github_actions_policy_name
   role = aws_iam_role.github_actions_role.id
 
   policy = jsonencode({
@@ -187,8 +192,8 @@ resource "aws_iam_role_policy" "github_actions_terraform_policy" {
           "s3:DeleteObject"
         ]
         Resource = [
-          "arn:aws:s3:::two-tier-alb-logs-bucket",
-          "arn:aws:s3:::two-tier-alb-logs-bucket/*"
+          var.alb_logs_bucket_arn,
+          "${var.alb_logs_bucket_arn}/*"
         ]
       },
       {

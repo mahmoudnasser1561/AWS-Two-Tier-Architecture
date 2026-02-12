@@ -11,15 +11,16 @@ module "vpc" {
 }
 
 module "alb" {
-  source             = "./modules/alb"
-  vpc_id             = module.vpc.vpc_id
-  public_subnet_ids  = module.vpc.alb_public_subnet_ids
-  private_subnet_ids = module.vpc.db_private_subnet_ids
-  logs_bucket_name   = module.s3_logs.logs_bucket_name
+  source            = "./modules/alb"
+  vpc_id            = module.vpc.vpc_id
+  public_subnet_ids = module.vpc.alb_public_subnet_ids
+  logs_bucket_name  = module.s3_logs.logs_bucket_name
 }
 
 module "db" {
   source                  = "./modules/db"
+  project_name            = var.project_name
+  environment             = var.environment
   vpc_id                  = module.vpc.vpc_id
   private_subnet_ids      = module.vpc.db_private_subnet_ids
   ec2_sg_id               = module.compute.ec2_sg_id
@@ -53,10 +54,14 @@ module "waf" {
 }
 
 module "s3_logs" {
-  source  = "./modules/s3_logs"
-  alb_arn = module.alb.lb_arn
+  source       = "./modules/s3_logs"
+  project_name = var.project_name
+  environment  = var.environment
 }
 
 module "iam" {
-  source = "./modules/iam"
+  source              = "./modules/iam"
+  project_name        = var.project_name
+  environment         = var.environment
+  alb_logs_bucket_arn = module.s3_logs.logs_bucket_arn
 }

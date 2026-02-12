@@ -1,5 +1,13 @@
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
+locals {
+  logs_bucket_name = lower("${var.project_name}-${var.environment}-${data.aws_region.current.name}-${data.aws_caller_identity.current.account_id}-alb-logs")
+}
+
 resource "aws_s3_bucket" "alb_logs" {
-  bucket = "two-tier-alb-logs-bucket"
+  bucket = local.logs_bucket_name
   tags   = { Name = "ALB Access Logs" }
 }
 

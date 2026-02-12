@@ -3,6 +3,18 @@ variable "main_region" {
   default = "us-east-1"
 }
 
+variable "project_name" {
+  description = "Project prefix used for naming resources"
+  type        = string
+  default     = "two-tier"
+}
+
+variable "environment" {
+  description = "Environment name (for example: dev, stage, prod)"
+  type        = string
+  default     = "dev"
+}
+
 variable "db_password" {
   description = "RDS user password"
   sensitive   = true
