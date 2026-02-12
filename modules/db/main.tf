@@ -1,6 +1,6 @@
 resource "aws_security_group" "rds_sg" {
-  name        = "two-tier-rds-sg"
-  vpc_id      = var.vpc_id 
+  name   = "two-tier-rds-sg"
+  vpc_id = var.vpc_id
 
   # Allow MySQL (3306) only from the EC2 SG
   ingress {
@@ -43,26 +43,27 @@ resource "aws_ssm_parameter" "db_password" {
 resource "aws_ssm_parameter" "db_name" {
   name  = "/db/name"
   type  = "String"
-  value = "two_tier_db" 
+  value = "two_tier_db"
 }
 
 resource "aws_db_instance" "two_tier_db" {
-  allocated_storage       = 10
-  engine                  = "mysql"
-  engine_version          = "5.7"
-  instance_class          = "db.t2.micro"
-  db_name                 = "two_tier_db"
-  identifier              = "two-tier-db"
-  username                = var.db_username
-  password                = var.db_password
-  db_subnet_group_name    = aws_db_subnet_group.two_tier_db.name
-  vpc_security_group_ids  = [aws_security_group.rds_sg.id]
-  parameter_group_name    = "default.mysql5.7"
-  backup_retention_period = var.backup_retention_period
-  skip_final_snapshot     = true
-  multi_az = true
-  performance_insights_enabled = true  
-  monitoring_interval          = 60    
-  enabled_cloudwatch_logs_exports = ["error", "general", "slowquery"] 
+  allocated_storage               = 10
+  engine                          = "mysql"
+  engine_version                  = "8.0"
+  instance_class                  = "db.t3.micro"
+  db_name                         = "two_tier_db"
+  identifier                      = "two-tier-db"
+  username                        = var.db_username
+  password                        = var.db_password
+  db_subnet_group_name            = aws_db_subnet_group.two_tier_db.name
+  vpc_security_group_ids          = [aws_security_group.rds_sg.id]
+  parameter_group_name            = "default.mysql8.0"
+  allow_major_version_upgrade     = true
+  backup_retention_period         = var.backup_retention_period
+  skip_final_snapshot             = false
+  final_snapshot_identifier       = "two-tier-db-final-snapshot"
+  multi_az                        = true
+  performance_insights_enabled    = true
+  monitoring_interval             = 60
+  enabled_cloudwatch_logs_exports = ["error", "general", "slowquery"]
 }
-
