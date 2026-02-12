@@ -1,3 +1,12 @@
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+locals {
+  az_a = data.aws_availability_zones.available.names[0]
+  az_b = data.aws_availability_zones.available.names[1]
+}
+
 resource "aws_vpc" "two-tier-vpc" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -6,9 +15,9 @@ resource "aws_vpc" "two-tier-vpc" {
 }
 
 resource "aws_subnet" "bastion_pub" {
-  vpc_id            = aws_vpc.two-tier-vpc.id
-  cidr_block        = "10.0.5.0/24"
-  availability_zone = "us-east-1a"
+  vpc_id                  = aws_vpc.two-tier-vpc.id
+  cidr_block              = "10.0.5.0/24"
+  availability_zone       = local.az_a
   map_public_ip_on_launch = true
   tags = {
     Name = "BastionPub"
@@ -16,9 +25,9 @@ resource "aws_subnet" "bastion_pub" {
 }
 
 resource "aws_subnet" "nat_pub" {
-  vpc_id            = aws_vpc.two-tier-vpc.id
-  cidr_block        = "10.0.6.0/24"
-  availability_zone = "us-east-1b"
+  vpc_id                  = aws_vpc.two-tier-vpc.id
+  cidr_block              = "10.0.6.0/24"
+  availability_zone       = local.az_b
   map_public_ip_on_launch = true
   tags = {
     Name = "NatPub"
@@ -28,7 +37,7 @@ resource "aws_subnet" "nat_pub" {
 resource "aws_subnet" "web_priv1" {
   vpc_id            = aws_vpc.two-tier-vpc.id
   cidr_block        = "10.0.4.0/24"
-  availability_zone = "us-east-1a"
+  availability_zone = local.az_a
   tags = {
     Name = "WebPriv1"
   }
@@ -37,7 +46,7 @@ resource "aws_subnet" "web_priv1" {
 resource "aws_subnet" "web_priv2" {
   vpc_id            = aws_vpc.two-tier-vpc.id
   cidr_block        = "10.0.3.0/24"
-  availability_zone = "us-east-1b"
+  availability_zone = local.az_b
   tags = {
     Name = "WebPriv2"
   }
@@ -46,7 +55,7 @@ resource "aws_subnet" "web_priv2" {
 resource "aws_subnet" "db_priv1" {
   vpc_id            = aws_vpc.two-tier-vpc.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
+  availability_zone = local.az_a
   tags = {
     Name = "DbPriv1"
   }
@@ -55,7 +64,7 @@ resource "aws_subnet" "db_priv1" {
 resource "aws_subnet" "db_priv2" {
   vpc_id            = aws_vpc.two-tier-vpc.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-1b"
+  availability_zone = local.az_b
   tags = {
     Name = "DbPriv2"
   }
