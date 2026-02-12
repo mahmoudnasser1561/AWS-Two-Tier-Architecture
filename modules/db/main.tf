@@ -53,6 +53,7 @@ resource "aws_db_instance" "two_tier_db" {
   instance_class                  = "db.t3.micro"
   db_name                         = "two_tier_db"
   identifier                      = "two-tier-db"
+  storage_encrypted               = true
   username                        = var.db_username
   password                        = var.db_password
   db_subnet_group_name            = aws_db_subnet_group.two_tier_db.name
