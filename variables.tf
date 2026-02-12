@@ -13,9 +13,10 @@ variable "db_username" {
   sensitive   = true
 }
 
-variable "MY_IP" {
-  description = "My Machine IP"
-  default = "156.199.83.23"
+variable "my_ip" {
+  description = "CIDR block allowed SSH access to bastion (example: 203.0.113.42/32)"
+  type        = string
+  default     = "156.199.83.23/32"
 }
 
 variable "public_key_path" {

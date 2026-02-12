@@ -44,7 +44,7 @@ resource "aws_security_group" "bastion_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["${var.my_ip}/32"]
+    cidr_blocks = [var.my_ip]
   }
 
   egress {
@@ -93,9 +93,9 @@ resource "aws_iam_role_policy" "ec2_policy" {
         Resource = "*"
       },
       {
-      Effect   = "Allow"
-      Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "cloudwatch:PutMetricData"]
-      Resource = "*"
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "cloudwatch:PutMetricData"]
+        Resource = "*"
       }
     ]
   })
@@ -117,7 +117,7 @@ resource "aws_launch_template" "two_tier_lt" {
     arn = aws_iam_instance_profile.ec2_profile.arn
   }
 
- user_data = base64encode(<<-EOF
+  user_data = base64encode(<<-EOF
   #!/bin/bash
   set -e
 
@@ -164,7 +164,7 @@ resource "aws_launch_template" "two_tier_lt" {
 
   systemctl enable amazon-cloudwatch-agent
 EOF
-)
+  )
 
 
   lifecycle {
@@ -175,17 +175,17 @@ EOF
 resource "aws_autoscaling_group" "two_tier_asg" {
   name                = "two-tier-asg"
   min_size            = 2
-  max_size            = 4  
+  max_size            = 4
   desired_capacity    = 2
   health_check_type   = "ELB"
-  vpc_zone_identifier = var.web_private_subnet_ids 
+  vpc_zone_identifier = var.web_private_subnet_ids
 
   launch_template {
     id      = aws_launch_template.two_tier_lt.id
     version = "$Latest"
   }
 
-  target_group_arns = [var.target_group_arn]  
+  target_group_arns = [var.target_group_arn]
 
   tag {
     key                 = "Name"
@@ -207,6 +207,6 @@ resource "aws_autoscaling_policy" "scale_out" {
     predefined_metric_specification {
       predefined_metric_type = "ASGAverageCPUUtilization"
     }
-    target_value = 50.0  
+    target_value = 50.0
   }
 }

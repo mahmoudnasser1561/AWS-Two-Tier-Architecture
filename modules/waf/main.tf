@@ -1,15 +1,15 @@
 resource "aws_wafv2_web_acl" "alb_waf" {
-  name        = "two-tier-waf"
-  scope       = "REGIONAL"  
+  name  = "two-tier-waf"
+  scope = "REGIONAL"
   default_action {
-    allow {}  
+    allow {}
   }
 
   rule {
     name     = "AWSManagedRulesCommonRuleSet"
     priority = 1
     override_action {
-      count {}  
+      none {}
     }
     statement {
       managed_rule_group_statement {

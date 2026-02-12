@@ -38,7 +38,7 @@ module "compute" {
   source                 = "./modules/compute"
   vpc_id                 = module.vpc.vpc_id
   web_private_subnet_ids = module.vpc.web_private_subnet_ids
-  my_ip                  = var.MY_IP
+  my_ip                  = var.my_ip
   public_key_path        = var.public_key_path
   target_group_arn       = module.alb.target_group_arn
   bastion_subnet_id      = module.vpc.bastion_public_subnet_id
