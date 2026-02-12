@@ -10,6 +10,11 @@ variable "email_address" {
 
 variable "cpu_high_threshold" {
   type        = number
-  default     = 70 
+  default     = 70
   description = "CPU threshold for high utilization alarm"
+}
+
+variable "db_instance_identifier" {
+  description = "RDS DB instance identifier used for CloudWatch alarm dimensions"
+  type        = string
 }

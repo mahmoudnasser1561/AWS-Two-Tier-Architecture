@@ -26,12 +26,12 @@ resource "aws_cloudwatch_metric_alarm" "asg_cpu_high" {
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2AutoScaling"
-  period              = 300 
+  namespace           = "AWS/EC2"
+  period              = 300
   statistic           = "Average"
   threshold           = var.cpu_high_threshold
   alarm_description   = "Alarm when ASG average CPU exceeds ${var.cpu_high_threshold}%"
-  alarm_actions       = [aws_sns_topic.asg_notifications.arn] 
+  alarm_actions       = [aws_sns_topic.asg_notifications.arn]
 
   dimensions = {
     AutoScalingGroupName = var.asg_name
@@ -46,18 +46,18 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections_high" {
   namespace           = "AWS/RDS"
   period              = 300
   statistic           = "Average"
-  threshold           = 100 
+  threshold           = 100
   alarm_description   = "Alarm when RDS connections exceed 100"
   alarm_actions       = [aws_sns_topic.asg_notifications.arn]
 
   dimensions = {
-    DBInstanceIdentifier = "two-tier-db" 
+    DBInstanceIdentifier = var.db_instance_identifier
   }
 }
 
 resource "aws_cloudwatch_log_group" "ec2_logs" {
   name              = "/ec2/two-tier/apache"
-  retention_in_days = 14  
+  retention_in_days = 14
 }
 
 resource "aws_cloudwatch_log_group" "rds_logs" {

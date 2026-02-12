@@ -3,3 +3,6 @@
 *.tfstate.*
 tfplan
 *.log
+
+pla.txt
+todo.txt
